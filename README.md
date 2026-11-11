@@ -6,6 +6,8 @@ Changing a prompt, swapping a model, or bumping a temperature can quietly break 
 relied on. `promptcheck` lets you describe what "good" looks like in a small TOML file, runs it
 against any model, and tells you in CI exactly what regressed.
 
+**Easier Explanation: It lets you write tests for AI prompts in a simple file, runs them against a model, and tells you if a change broke something that used to work.**
+
 ```
 $ promptcheck run examples/failing_demo.toml
 
