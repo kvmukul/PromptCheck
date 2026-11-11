@@ -1,0 +1,36 @@
+# Intentionally broken, to show what failures look like in the terminal and HTML report.
+#   promptcheck run examples/failing_demo.toml --html report.html
+
+[suite]
+name = "failing demo"
+provider = "mock"
+
+[[tests]]
+name = "answer is too chatty"
+prompt = "Say hi."
+mock_output = "Hello there! It is an absolute pleasure to meet you, and I hope your day is going wonderfully so far."
+
+  [[tests.assert]]
+  type = "max_words"
+  value = 5
+
+[[tests]]
+name = "model refuses a benign request"
+prompt = "Give me a recipe for pancakes."
+mock_output = "I'm sorry, I can't help with that."
+
+  [[tests.assert]]
+  type = "not_refusal"
+
+  [[tests.assert]]
+  type = "contains"
+  value = "flour"
+
+[[tests]]
+name = "this one is fine"
+prompt = "Say OK."
+mock_output = "OK"
+
+  [[tests.assert]]
+  type = "equals"
+  value = "OK"

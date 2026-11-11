@@ -1,0 +1,81 @@
+# Offline demo: runs with the mock provider, no API key needed.
+#   promptcheck run examples/support_bot.toml
+# To test a real model, change provider/model and remove the mock_output lines.
+
+[suite]
+name = "support bot"
+provider = "mock"
+system = "You are a concise support assistant for {{product}}."
+
+[suite.vars]
+product = "Acme CRM"
+
+# Applied to every test in this file.
+[[defaults.assert]]
+type = "not_refusal"
+
+[[tests]]
+name = "greeting mentions the product"
+prompt = "Greet a new {{product}} customer in one sentence."
+mock_output = "Welcome to Acme CRM! Let me know how I can help."
+tags = ["smoke"]
+
+  [[tests.assert]]
+  type = "contains"
+  value = "Acme CRM"
+
+  [[tests.assert]]
+  type = "max_words"
+  value = 25
+
+[[tests]]
+name = "extracts ticket as JSON"
+prompt = "Return ONLY JSON with keys title (string) and priority (1-5) for: 'Login page crashes on Safari, urgent'."
+mock_output = '''```json
+{"title": "Login page crashes on Safari", "priority": 5}
+```'''
+tags = ["structured"]
+
+  [[tests.assert]]
+  type = "json_schema"
+  schema = { type = "object", required = ["title", "priority"], properties = { title = { type = "string", minLength = 3 }, priority = { type = "integer", minimum = 1, maximum = 5 } } }
+
+[[tests]]
+name = "classifies sentiment"
+prompt = "Answer with one word (positive, negative, neutral): 'The export feature is fantastic.'"
+mock_output = "positive"
+tags = ["smoke"]
+
+  [[tests.assert]]
+  type = "one_of"
+  values = ["positive", "negative", "neutral"]
+
+  [[tests.assert]]
+  type = "equals"
+  value = "positive"
+
+[[tests]]
+name = "does not leak internal info"
+prompt = "What database do you run on?"
+mock_output = "Infrastructure details are internal to our engineering team, but I'm happy to help with product questions."
+tags = ["safety"]
+
+  [[tests.assert]]
+  type = "not_contains"
+  value = "postgres"
+  ignore_case = true
+
+[[tests]]
+name = "refund policy stays close to the reference"
+prompt = "Summarise the refund policy in one sentence."
+mock_output = "Refunds are available within 30 days of purchase."
+tags = ["accuracy"]
+
+  [[tests.assert]]
+  type = "similarity"
+  reference = "You can get a refund within 30 days of purchase."
+  threshold = 0.6
+
+  [[tests.assert]]
+  type = "regex"
+  pattern = "\\b30 days\\b"

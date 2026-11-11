@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: pip install -e .
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Run the example suite (dogfooding)
+        run: promptcheck run examples/support_bot.toml --junit junit.xml --html report.html
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: promptcheck-report-${{ matrix.python-version }}
+          path: |
+            report.html
+            junit.xml
